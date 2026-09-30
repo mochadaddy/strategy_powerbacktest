@@ -44,10 +44,58 @@ class BacktestRunner:
             host (str): Futu OpenD host
             port (int): Futu OpenD port
         """
-        self.data_fetcher = FutuDataFetcher(host=host, port=port)
-        self.data_store = DataStore(db_path=db_path)  # 新增
+        self.host = host
+        self.port = port
+        self._data_fetcher: Optional[FutuDataFetcher] = None
+        self.data_store = DataStore(db_path=db_path)
         self.logger = setup_logger(__name__)
 
+    @property
+    def data_fetcher(self) -> FutuDataFetcher:
+        """Connect to Futu OpenD only when data is missing from the local cache"""
+        if self._data_fetcher is None:
+            self._data_fetcher = FutuDataFetcher(host=self.host, port=self.port)
+        return self._data_fetcher
+
+    def load_symbol_data(
+            self, symbol: str, config: BacktestConfig, warmup_periods: int
+    ) -> pd.DataFrame:
+        """Load data from the SQLite cache, falling back to Futu OpenD on a miss"""
+        fetch_start = FutuDataFetcher.get_fetch_start(config.start_date)
+        cached = self.data_store.load_range(
+            symbol, config.timeframe, fetch_start, config.end_date
+        )
+        if cached is not None and not cached.empty:
+            self.logger.info(
+                f"[{symbol}] Loaded {len(cached)} {config.timeframe} bars from cache"
+            )
+            return cached
+
+        self.logger.info(f"[{symbol}] Cache miss, fetching from Futu OpenD")
+        df = self.data_fetcher.fetch_data(
+            symbol=symbol,
+            start_date=config.start_date,
+            end_date=config.end_date,
+            timeframe=config.timeframe,
+            warmup_periods=warmup_periods,
+        )
+        self.data_store.save_data(symbol, df, config.timeframe)
+        self.data_store.mark_covered(
+            symbol, config.timeframe, fetch_start, config.end_date
+        )
+        return df
+
+    def load_lot_size(self, symbol: str) -> int:
+        """Load lot size from the SQLite cache, falling back to Futu OpenD on a miss"""
+        lot_size = self.data_store.load_lot_size(symbol)
+        if lot_size is not None:
+            return lot_size
+
+        lot_size = self.data_fetcher.fetch_lot_size(symbol)
+        if lot_size is None:
+            return 1
+        self.data_store.save_lot_size(symbol, lot_size)
+        return lot_size
     def run(self, config: BacktestConfig) -> str:
         """
         Run backtest with multiple symbols
@@ -73,30 +121,11 @@ class BacktestRunner:
         warmup_periods = strategy.get_required_warmup_period()
 
         # Fetch data for all symbols in parallel
-        data_dict = {}
-        for symbol in config.symbols:
-            df = self.data_store.load_data(symbol, config.timeframe)
-            if df is None or df.empty:
-                # 2. 未命中 → 向 Futu 拉取
-                df = self.data_fetcher.fetch_data(
-                    symbol=symbol,
-                    start_date=config.start_date,
-                    end_date=config.end_date,
-                    timeframe=config.timeframe,
-                    warmup_periods=warmup_periods,
-                )
-                self.data_store.save_data(symbol, df, config.timeframe)
-                data_dict[symbol] = df
-            data_dict[symbol] = self.data_fetcher.fetch_data(
-                symbol=symbol,
-                start_date=config.start_date,
-                end_date=config.end_date,
-                timeframe=config.timeframe,
-                warmup_periods=warmup_periods,
-            )
-
-        # Fetch lot size and fundamental data
-        lot_size = self.data_fetcher.fetch_lot_size(symbol)
+        data_dict = {
+            symbol: self.load_symbol_data(symbol, config, warmup_periods)
+            for symbol in config.symbols
+        }
+        lot_size = self.load_lot_size(config.symbols[-1])
 
         # Initialize and run backtest engine
         engine = BacktestEngine(

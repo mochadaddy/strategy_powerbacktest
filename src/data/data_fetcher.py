@@ -1,5 +1,5 @@
 from futu import *
-from typing import List, Dict, Any
+from typing import List, Dict, Any,Optional
 import pandas as pd
 from datetime import datetime
 from src.utils.logger import setup_logger
@@ -10,6 +10,7 @@ logger = setup_logger(__name__)
 
 
 class FutuDataFetcher:
+    WARMUP_CALENDAR_DAYS = 100
     # FutuDataFetcher在实例化过程中初始化库OpenQuoteContext中的一个实例futu
     def __init__(self, host: str = "localhost", port: int = 11111):
         self.quote_ctx = OpenQuoteContext(host=host, port=port)
@@ -107,7 +108,7 @@ class FutuDataFetcher:
             logger.error(f"Error getting trading calendar: {str(e)}")
             return pd.DatetimeIndex([])
 
-    def fetch_lot_size(self, symbol: str) -> int:
+    def fetch_lot_size(self, symbol: str) -> Optional[int]:
         """
         Fetch lot size for a given symbol from Futu API
 
@@ -115,19 +116,19 @@ class FutuDataFetcher:
             symbol: Stock symbol
 
         Returns:
-            int: Lot size for the symbol
+            Optional[int]: Lot size for the symbol, or None if it could not be fetched
         """
         try:
             ret_code, data = self.quote_ctx.get_market_snapshot([symbol])
             if ret_code != RET_OK:
                 logger.error(f"Failed to fetch lot size for {symbol}: {data}")
-                return 1  # Default lot size
+                return None  # Default lot size
 
             return int(data["lot_size"][0])
 
         except Exception as e:
             logger.error(f"Error fetching lot size for {symbol}: {str(e)}")
-            return 1  # Default lot size
+            return None  # Default lot size
 
     def fetch_fundamental_data(self, symbol: str) -> Dict[str, Any]:
         """
@@ -183,6 +184,11 @@ class FutuDataFetcher:
             logger.error(f"Error fetching fundamental data for {symbol}: {str(e)}")
             return {}
 
+    @classmethod
+    def get_fetch_start(cls, start_date: datetime) -> datetime:
+        """Start of the fetched range, including the warmup period"""
+        return start_date - pd.Timedelta(days=cls.WARMUP_CALENDAR_DAYS)
+
     def fetch_data(
         self,
         symbol: str,
@@ -205,7 +211,7 @@ class FutuDataFetcher:
             DataFrame with warmup period included
         """
         # Always request 100 extra days of data
-        adjusted_start = start_date - pd.Timedelta(days=100)
+        adjusted_start = self.get_fetch_start(start_date)
 
         # Fetch data including warmup period
         data = self._fetch_historical_data(symbol, adjusted_start, end_date, timeframe)
