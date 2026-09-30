@@ -179,7 +179,7 @@ class StrategyBacktestReport:
         template_path = os.path.join(
             os.path.dirname(__file__), "../templates/strategy_backtest_report.html"
         )
-        with open(template_path, "r") as f:
+        with open(template_path, "r",encoding="utf-8") as f:
             template = Template(f.read())
 
         # Calculate portfolio-level metrics
@@ -189,6 +189,8 @@ class StrategyBacktestReport:
         correlation_symbols = list(self.symbol_results.keys())
         correlation_data = self._prepare_correlation_data()
         portfolio_equity_data = self._prepare_portfolio_equity_data()
+        #print(portfolio_equity_data[:5])
+
 
         # Format metrics for display with proper extraction
         overall_metrics = [

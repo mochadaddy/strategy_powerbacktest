@@ -401,9 +401,11 @@ class BacktestEngine:
         return StrategyBacktestReport(
             strategy_name=self.strategy.__class__.__name__,
             start_date=pd.to_datetime(
+                #start_date
                 min(data.index.min() for data in data_dict.values())
             ),
             end_date=pd.to_datetime(
+                #end_date
                 max(data.index.max() for data in data_dict.values())
             ),
             initial_capital=self.initial_capital,

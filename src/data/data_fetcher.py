@@ -10,6 +10,7 @@ logger = setup_logger(__name__)
 
 
 class FutuDataFetcher:
+    # FutuDataFetcher在实例化过程中初始化库OpenQuoteContext中的一个实例futu
     def __init__(self, host: str = "localhost", port: int = 11111):
         self.quote_ctx = OpenQuoteContext(host=host, port=port)
         logger.info("Initialized Futu OpenQuoteContext")
@@ -17,6 +18,7 @@ class FutuDataFetcher:
     def __del__(self):
         self.quote_ctx.close()
 
+    # 历史数据是通过_fetch_historical_data与Futu request_history_klineAPI交互的方式获取的。
     def _fetch_historical_data(
         self, symbol: str, start: datetime, end: datetime, timeframe: str = "DAY"
     ) -> pd.DataFrame:

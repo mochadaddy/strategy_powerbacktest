@@ -5,7 +5,7 @@ from .moving_average_strategy import MovingAverageCrossStrategy
 from .btse_strategy import BTSEStrategy
 from .leg_strategy import LEGStrategy
 
-
+# 维护策略键与其对应实现类之间的静态映射，并为 CLI 和配置验证提供参数元数据。
 class StrategyFactory:
     """
     Factory class for creating trading strategies
@@ -18,7 +18,7 @@ class StrategyFactory:
         "macd": MACDStrategy,
         "ma_cross": MovingAverageCrossStrategy,
         "btse": BTSEStrategy,
-        "leg": LEGStrategy,
+        "leg": LEGStrategy
     }
 
     @classmethod

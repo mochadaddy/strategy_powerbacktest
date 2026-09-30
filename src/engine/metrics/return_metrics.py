@@ -2,6 +2,10 @@ from typing import Dict, List, Any
 import pandas as pd
 import numpy as np
 
+"""
+它详细介绍了ReturnMetrics（src/engine/metrics/return_metrics.py）和RiskMetrics（src/engine/metrics/risk_metrics.py）
+提供的静态计算方法。这些类接收投资组合模拟数据帧和交易列表，以计算总收益和年化收益、夏普比率和索提诺比率、波动率、回撤曲线、风险价值 (VaR) 和市场贝塔系数等财务绩效指标。
+"""
 
 class ReturnMetrics:
     """
@@ -35,7 +39,7 @@ class ReturnMetrics:
         # Calculate monthly returns using the returns column
         monthly_returns = (
             portfolio["returns"]
-            .resample("M")
+            .resample("ME")
             .apply(
                 lambda x: (1 + x).prod()
                 - 1  # Compound daily returns to get monthly return
@@ -43,7 +47,7 @@ class ReturnMetrics:
         )
 
         # Shift the index back by one month to align with actual trading months
-        monthly_returns.index = monthly_returns.index.shift(-1, freq="M")
+        monthly_returns.index = monthly_returns.index.shift(-1, freq="ME")
 
         return pd.DataFrame({"returns": monthly_returns})
 

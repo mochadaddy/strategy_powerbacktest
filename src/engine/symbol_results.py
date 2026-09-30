@@ -153,7 +153,7 @@ class BacktestReport:
             portfolio=portfolio,
             trades=trades,
             monthly_returns=metrics["monthly_returns"],
-            fundamental_data=None,
+            #fundamental_data=None,
             benchmark_data=metrics["benchmark_data"],
         )
 

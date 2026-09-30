@@ -20,6 +20,50 @@ class LEGStrategy(BaseStrategy):
 
     def calculate_indicators(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate all technical indicators used in the strategy"""
+        data = data.copy()
+
+        # 1. 统一列名转小写并去除两端空格
+        data.columns = [str(col).strip().lower() for col in data.columns]
+
+        # 2. 补齐 close (收盘价)
+        if "close" not in data.columns:
+            if "h1" in data.columns:
+                data["close"] = data["h1"]
+            elif "cg" in data.columns:
+                data["close"] = data["cg"]
+            else:
+                raise ValueError(f"缺少收盘价，可用列: {list(data.columns)}")
+
+        # 3. 补齐 open (开盘价)
+        if "open" not in data.columns:
+            if "open_1" in data.columns:
+                data["open"] = data["open_1"]
+            else:
+                # 找不到 open 时，降级直接使用 close 替代
+                data["open"] = data["close"]
+
+        # 4. 补齐 high & low (最高/最低价)
+        if "high" not in data.columns:
+            data["high"] = data["high_1"] if "high_1" in data.columns else data["close"]
+        if "low" not in data.columns:
+            data["low"] = data["low_1"] if "low_1" in data.columns else data["close"]
+
+        # 5. 补齐 volume (成交量)
+        if "volume" not in data.columns:
+            if "vol" in data.columns:
+                data["volume"] = data["vol"]
+            elif "qty" in data.columns:
+                data["volume"] = data["qty"]
+            elif "volume_1" in data.columns:
+                data["volume"] = data["volume_1"]
+            else:
+                # 找不到成交量时，默认设为 1，防止公式中的乘法计算报错
+                data["volume"] = 1.0
+
+        # 2. 填充数据开头的 NaN（预热期空值）
+        data = data.bfill().ffill().fillna(0)
+
+        close, high, low = data["close"], data["high"], data["low"]
         close, high, low = data["close"], data["high"], data["low"]
 
         # CG: MA(C,17)

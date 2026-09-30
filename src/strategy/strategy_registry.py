@@ -12,11 +12,13 @@ class StrategyRegistry:
     _instance = None
     _strategies: Dict[str, Type[BaseStrategy]] = {}
 
+    # 通过在实例化之前检查是否cls._instance为单例来实现单例模式。
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(StrategyRegistry, cls).__new__(cls)
         return cls._instance
 
+    # 在将提供的类BaseStrategy添加到内部字典之前，验证其是否为子类。
     @classmethod
     def register(cls, strategy_name: str, strategy_class: Type[BaseStrategy]) -> None:
         """
@@ -30,6 +32,7 @@ class StrategyRegistry:
             raise ValueError("Strategy must inherit from BaseStrategy")
         cls._strategies[strategy_name] = strategy_class
 
+    # 通过字符串键检索已注册的策略类，KeyError如果不存在则引发异常。
     @classmethod
     def get_strategy(cls, strategy_name: str) -> Type[BaseStrategy]:
         """
@@ -48,6 +51,7 @@ class StrategyRegistry:
             raise KeyError(f"Strategy '{strategy_name}' not found in registry")
         return cls._strategies[strategy_name]
 
+    # 返回所有已注册策略键的列表
     @classmethod
     def list_strategies(cls) -> list[str]:
         """

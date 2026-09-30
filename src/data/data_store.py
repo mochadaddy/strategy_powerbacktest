@@ -60,6 +60,8 @@ class DataStore:
             try:
                 with sqlite3.connect(self.db_path) as conn:
                     for _, row in data.iterrows():
+                        ts = row["time_key"] if "time_key" in row.index else row.name
+                        ts = pd.to_datetime(ts).isoformat()
                         conn.execute(
                             """
                             INSERT OR REPLACE INTO market_data
@@ -68,7 +70,8 @@ class DataStore:
                             """,
                             (
                                 symbol,
-                                row.name.isoformat(),
+                                ts,
+                                #row.name.isoformat(),
                                 json.dumps(row.to_dict()),
                                 interval,
                             ),

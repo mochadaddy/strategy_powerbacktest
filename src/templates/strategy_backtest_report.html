@@ -4,9 +4,9 @@
     <title>Multi-Symbol Backtest Report</title>
     <!-- Core Libraries -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://code.highcharts.com/stock/highstock.js"></script>
-    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="lib/highstock.js"></script>
+    <script src="lib/heatmap.js"></script>
+    <script src="lib/accessibility.js"></script>
 
     <!-- Tabler UI Core -->
     <link
@@ -43,7 +43,7 @@
 
     <!-- AG Grid -->
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-    <link
+    <!--<link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"
     />
@@ -51,7 +51,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css"
     />
-
+    -->
     <!-- Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -1335,7 +1335,7 @@
               <div class="trades-table">
                 <div
                   id="tradesGrid-{{ symbol|replace('.', '-') }}"
-                  class="ag-theme-alpine"
+                  <!--class="ag-theme-alpine"-->
                   style="height: 500px; width: 100%"
                 ></div>
               </div>

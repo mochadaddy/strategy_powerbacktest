@@ -27,7 +27,8 @@ def main():
 
     # Initialize backtest runner
     runner = BacktestRunner(
-        host=config.futu_config["host"], port=config.futu_config["port"]
+        host=config.futu_config["host"], port=config.futu_config["port"],db_path=config.data_config.get("storage", {}).
+        get("db_path")
     )
 
     # Create and run backtest

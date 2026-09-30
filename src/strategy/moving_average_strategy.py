@@ -10,7 +10,7 @@ Key Components:
     - Long-term Moving Average: Establishes the broader trend
     
 Trading Logic:
-    - Buy (1): When short-term MA crosses above long-term MA (bullish signal)
+    - Buy (1): When short-term MA crosses above long- term MA (bullish signal)
     - Sell (-1): When short-term MA crosses below long-term MA (bearish signal)
     - Hold (0): When no crossing occurs
 
