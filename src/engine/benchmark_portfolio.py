@@ -10,6 +10,7 @@ class BenchmarkPortfolio:
 
     def calculate_buy_and_hold(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate buy and hold performance using initial capital"""
+        data = data.set_index(pd.to_datetime(data["time_key"]))
         initial_price = data["close"].iloc[0]
 
         # Calculate maximum shares that could be bought with initial capital

@@ -230,6 +230,7 @@ class StrategyBacktestReport:
                 int(pd.Timestamp(t).timestamp() * 1000)
                 for t in results.equity_curve.index
             ]
+            bench = results.benchmark_data["value"].reindex(results.equity_curve.index).ffill()
 
             symbol_results_data[symbol] = {
                 "trades": [
@@ -347,7 +348,8 @@ class StrategyBacktestReport:
                 ],
                 "benchmark_curve": [
                     [ts, float(v)]
-                    for ts, v in zip(timestamps, results.benchmark_data["value"].values)
+                    for ts, v in zip(timestamps, bench.values)
+
                 ],
                 "drawdown": [
                     [int(pd.Timestamp(t).timestamp() * 1000), float(v)]

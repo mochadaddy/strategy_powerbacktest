@@ -85,7 +85,7 @@ class BacktestEngine:
 
         # Calculate benchmark data
         benchmark_portfolio = BenchmarkPortfolio(self.initial_capital, self.lot_size)
-        metrics["benchmark_data"] = benchmark_portfolio.calculate_buy_and_hold(data)
+        metrics["benchmark_data"] = benchmark_portfolio.calculate_buy_and_hold(trading_data)
 
         # Log final results
         self._log_backtest_summary(metrics)
