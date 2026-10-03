@@ -61,6 +61,19 @@ strategy:
     rsi_period: 9
     pattern_lookback: 120
 
+  regime:
+    adx_period: 14
+    adx_threshold: 25
+    ma_period: 50
+    ma_slope_period: 10
+    down_slope_pct: 0.02
+    bb_period: 20
+    bb_std: 2.0
+    rsi_period: 14
+    rsi_oversold: 30
+    rsi_overbought: 70
+    enter_on_uptrend: true
+
 # Logging Configuration
 logging:
   level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
