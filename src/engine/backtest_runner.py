@@ -140,6 +140,4 @@ class BacktestRunner:
         # Generate report
         output_dir = os.path.join(os.getcwd(), "reports")
         os.makedirs(output_dir, exist_ok=True)
-        results.generate_report(output_dir)
-
-        return os.path.join(output_dir, "strategy_backtest_report.html")
+        return results.generate_report(output_dir)

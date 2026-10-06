@@ -73,9 +73,9 @@ class TestMACDStrategy:
 
         # Verify signal logic
         for i in range(len(signals)):
-            if data["MACD"].iloc[i] > data["Signal"].iloc[i]:
+            if data["MACD"].iloc[i] > 0:
                 assert signals.iloc[i] == 1
-            elif data["MACD"].iloc[i] < data["Signal"].iloc[i]:
+            elif data["MACD"].iloc[i] < 0:
                 assert signals.iloc[i] == -1
             else:
                 assert signals.iloc[i] == 0

@@ -116,13 +116,22 @@ class MACDStrategy(BaseStrategy):
 
         Returns:
             pd.Series: Trading signals aligned with the input data's index
-        """
+
         signals = pd.Series(0, index=data.index)
 
         # Generate signals using the clean data
         signals[data["MACD"] > data["Signal"]] = 1
         signals[data["MACD"] < data["Signal"]] = -1
 
+        return signals
+        """
+        """  
+        1 (Buy)  : MACD > 0（上穿0轴后持续输出买入/持有状态）  
+        -1 (Sell): MACD < 0（下穿0轴后持续输出卖出/空仓状态）  
+        """
+        signals = pd.Series(0, index=data.index)
+        signals[data["MACD"] > 0] = 1
+        signals[data["MACD"] < 0] = -1
         return signals
 
     def validate_parameters(self) -> bool:

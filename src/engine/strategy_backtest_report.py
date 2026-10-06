@@ -174,7 +174,7 @@ class StrategyBacktestReport:
             annotations.append(annotation)
         return annotations
 
-    def generate_report(self, output_dir: str) -> None:
+    def generate_report(self, output_dir: str) -> str:
         """Generate HTML report for multi-symbol backtest"""
         template_path = os.path.join(
             os.path.dirname(__file__), "../templates/strategy_backtest_report.html"
@@ -381,6 +381,11 @@ class StrategyBacktestReport:
         os.makedirs(output_dir, exist_ok=True)
 
         # Write HTML file
-        output_path = os.path.join(output_dir, "strategy_backtest_report.html")
-        with open(output_path, "w") as f:
+        symbols_str = "_".join(self.symbol_results.keys())
+        filename = f"{self.strategy_name}_{symbols_str}_backtest_report.html"
+        output_path = os.path.join(output_dir, filename)
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_content)
+
+            # 同时建议让方法返回路径，方便调用方：
+        return output_path
