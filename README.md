@@ -1,4 +1,4 @@
-[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-000000?style=flat&logo=github)](https://deepwiki.com/mochadaddy/strategy_powerbacktest)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-2563eb?style=flat-square)](https://deepwiki.com/mochadaddy/strategy_powerbacktest)
 # Strategy Power Backtester 📈
 
 A professional-grade algorithmic trading backtesting framework with seamless integration with Futu OpenAPI, designed for quantitative traders and researchers.
