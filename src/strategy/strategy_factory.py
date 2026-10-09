@@ -4,6 +4,7 @@ from .macd_strategy import MACDStrategy
 from .moving_average_strategy import MovingAverageCrossStrategy
 from .btse_strategy import BTSEStrategy
 from .leg_strategy import LEGStrategy
+from .regime_strategy import RegimeStrategy
 
 # 维护策略键与其对应实现类之间的静态映射，并为 CLI 和配置验证提供参数元数据。
 class StrategyFactory:
@@ -18,7 +19,8 @@ class StrategyFactory:
         "macd": MACDStrategy,
         "ma_cross": MovingAverageCrossStrategy,
         "btse": BTSEStrategy,
-        "leg": LEGStrategy
+        "leg": LEGStrategy,
+        "regime": RegimeStrategy,
     }
 
     @classmethod
@@ -89,6 +91,23 @@ class StrategyFactory:
                         "min": 1,
                         "max": 1000,
                     },
+                },
+            },
+            "regime": {
+                "name": "Market Regime Strategy",
+                "description": "Hold in uptrends, buy low / sell high in ranges, liquidate in downtrends",
+                "parameters": {
+                    "adx_period": {"type": "int", "default": 14, "min": 2, "max": 100},
+                    "adx_threshold": {"type": "float", "default": 25, "min": 1, "max": 99},
+                    "ma_period": {"type": "int", "default": 50, "min": 2, "max": 250},
+                    "ma_slope_period": {"type": "int", "default": 10, "min": 1, "max": 100},
+                    "down_slope_pct": {"type": "float", "default": 0.02, "min": 0.001, "max": 0.5},
+                    "bb_period": {"type": "int", "default": 20, "min": 2, "max": 100},
+                    "bb_std": {"type": "float", "default": 2.0, "min": 0.5, "max": 5},
+                    "rsi_period": {"type": "int", "default": 14, "min": 2, "max": 100},
+                    "rsi_oversold": {"type": "float", "default": 30, "min": 1, "max": 99},
+                    "rsi_overbought": {"type": "float", "default": 70, "min": 1, "max": 99},
+                    "enter_on_uptrend": {"type": "bool", "default": True},
                 },
             },
         }
