@@ -62,11 +62,9 @@ class MACDStrategy(BaseStrategy):
         self.fast_period = parameters.get("fast_period", 12)
         self.slow_period = parameters.get("slow_period", 26)
         self.signal_period = parameters.get("signal_period", 9)
+        self.small_body = parameters.get("small_body", 0.01)  # 新增
+        self.min_star_count = parameters.get("min_star_count", 2)  # 新增
         self.validate_parameters()
-        self.evening_star_exit = parameters.get("evening_star_exit", True)
-        self.first_body_pct = parameters.get("first_body_pct", 0.03)  # 第一根实体涨幅
-        self.star_body_ratio = parameters.get("star_body_ratio", 0.3)  # 星线实体/全幅上限
-        self.es_window = parameters.get("es_window", 10)  # “连续”判定窗口
         super().__init__(parameters)
 
     def calculate_indicators(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -97,6 +95,24 @@ class MACDStrategy(BaseStrategy):
 
         # Calculate Histogram
         data["Histogram"] = data["MACD"] - data["Signal"]
+
+        # 黄昏星识别
+        body = data["close"] - data["open"]
+        avg_gain = body[body > 0].mean()
+        o, c = data["open"], data["close"]
+        body_min = pd.concat([o, c], axis=1).min(axis=1)
+        body_max = pd.concat([o, c], axis=1).max(axis=1)
+
+        cond1 = body.shift(2) > avg_gain
+        cond2 = (body_min.shift(1) > c.shift(2)) & (abs(body.shift(1)) <= self.small_body)
+        cond3 = (body_max < c.shift(1)) & (c < (o.shift(2) + c.shift(2)) / 2)
+
+        data["evening_star"] = cond1 & cond2 & cond3
+
+        # 关键：仅在 MACD>0 的连续段内累计黄昏星
+        above = data["MACD"] > 0
+        segment = (above != above.shift()).cumsum()
+        data["star_count"] = data["evening_star"].groupby(segment).cumsum().where(above, 0)
 
         return data
 
@@ -137,6 +153,17 @@ class MACDStrategy(BaseStrategy):
         signals = pd.Series(0, index=data.index)
         signals[data["MACD"] > 0] = 1
         signals[data["MACD"] < 0] = -1
+
+        # 增强卖出：MACD>0 时第2次及以上黄昏星的下一日
+        signals = pd.Series(0, index=data.index)
+        signals[data["MACD"] > data["Signal"]] = 1
+        signals[data["MACD"] < data["Signal"]] = -1
+
+        # 增强卖出：MACD>0 段内累计第 min_star_count 次黄昏星的下一交易日
+        enhanced_sell = (data["evening_star"]
+                         & (data["star_count"] >= self.min_star_count)
+                         ).shift(1, fill_value=False)
+        signals[enhanced_sell] = -1
         return signals
 
     def validate_parameters(self) -> bool:
@@ -162,28 +189,9 @@ class MACDStrategy(BaseStrategy):
             raise ValueError("signal_period must be greater than 0")
         if self.fast_period >= self.slow_period:
             raise ValueError("fast_period must be less than slow_period")
+        if self.small_body <= 0:
+            raise ValueError("small_body must be greater than 0")
+        if self.min_star_count < 1:
+            raise ValueError("min_star_count must be at least 1")
         return True
 
-    def _is_evening_star(self, data: pd.DataFrame) -> pd.Series:
-        o, h, l, c = data["open"], data["high"], data["low"], data["close"]
-        body = (c - o).abs()
-        body_pct = (c - o) / o  # 实体涨幅（阳线为正）
-
-        # ── 动态基准：截至前一 bar，上涨日实体涨幅的累计均值 ──
-        up_body = body_pct.where(c > o)  # 非上涨日置 NaN
-        avg_up_body = up_body.expanding(min_periods=self.up_days_min).mean()
-        long_body = body_pct > avg_up_body.shift(1)  # shift(1) 防止当日计入自身
-
-        # t-2 第一根：阳线且实体涨幅超过历史上涨日平均涨幅
-        bull1 = (c.shift(2) > o.shift(2)) & long_body.shift(2)
-
-        # t-1 第二根：跳空 + 实体极小（不变）
-        rng1 = h.shift(1) - l.shift(1)
-        star = (np.minimum(c.shift(1), o.shift(1)) > c.shift(2)) & \
-               (body.shift(1) <= rng1 * self.star_body_ratio)
-
-        # t 第三根：跳空低开 + 收盘跌破第一根实体中点（不变）
-        mid1 = (o.shift(2) + c.shift(2)) / 2
-        bear3 = (o < np.maximum(c.shift(1), o.shift(1))) & (c < o) & (c < mid1)
-
-        return bull1 & star & bear3
